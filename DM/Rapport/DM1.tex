@@ -1,0 +1,314 @@
+% Document : rendu du DM1
+% Auteur : Xavier Gandibleux, Romain Bernard
+% Année académique : 2017-2018
+
+\documentclass[ a4paper,10pt]{article}
+
+
+% passe en mode large sur la page A4
+\usepackage{a4wide} 
+
+% document francisé
+\usepackage[francais]{babel} 
+
+% permet la frappe de caractères accentués (sur macOS)
+\usepackage[utf8x]{inputenc} 
+
+\usepackage{amsmath}
+
+\usepackage{listings}
+
+\lstset{language=Python}
+% individualisation des paramètres de la page
+\parskip8pt
+\setlength{\topmargin}{-25mm}
+\setlength{\textheight}{250mm}
+
+%
+% -----------------------------------------------------------------------------------------------------------------------------------------------------
+%
+
+\begin{document}
+
+{\large
+\begin{center}
+Université de Nantes - UFR Sciences et Techniques
+
+Année 2017-2018    ---   M1 ORO - M1 DS
+\vspace{5mm}
+ 
+{ \Large \textbf {Métaheursitiques }\\ Livrable DM1 (distanciel)\medskip
+ 
+  Romain \textsc{BERNARD}
+}  
+\end{center}
+}
+
+\noindent
+
+%
+% -----------------------------------------------------------------------------------------------------------------------------------------------------
+%
+
+\vspace{5mm}
+\noindent
+\fbox{
+  \begin{minipage}{0.97 \textwidth}
+    \begin{center}
+      \vspace{1mm}
+      \Large{Formulation du SPP}
+      \vspace{1mm}
+    \end{center}
+  \end{minipage}
+}
+\vspace{2mm}
+
+\noindent
+Le SPP ou Set Packing Problem est un problème linéaire en maximisation s'écrivant  :
+
+\begin{equation*}
+\setlength\arraycolsep{1.5pt}
+  \begin{array}{l@{\quad} r c r c r}
+    \max          & \sum_{i=1}^{n} \limits & (C_i * x_i)    \\
+    \mathrm{s.c.} & \sum_{i=1}^{n} \limits & t_{i,j} * x_{i} \leq  1 & \forall j \in & J \\
+    			  & x_i \in & \{0,1\} & \forall i \in I
+  \end{array}
+\end{equation*}
+
+Ce type de problème peut être applicable dans la réalité à la réalisation de produits finis à partir de sets de ressources de bases limités tout en maximisant le profit. \\ Imaginons un menuisier qui a besoin de certains sets de planches pour réaliser des meubles. Un même set peut servir pour la construction de différents meubles et un meuble est réalisable grâce à au moins un des sets. Si le menuisier veut optimiser le profit généré par ses ressources limitées, on est face à un SPP.
+
+%
+% -----------------------------------------------------------------------------------------------------------------------------------------------------
+%
+
+\vspace{5mm}
+\noindent
+\fbox{
+  \begin{minipage}{0.97 \textwidth}
+    \begin{center}
+      \vspace{1mm}
+        \Large{Modélisation JuMP (ou GMP) du SPP}
+      \vspace{1mm}
+    \end{center}
+  \end{minipage}
+}
+\vspace{2mm}
+
+\noindent
+
+\begin{lstlisting}[frame=single]
+# Setting an ip model of SPP
+function setSPP(solverSelected, C, A)
+  m, n = size(A)
+  ip = Model(solver=solverSelected)
+  @variable(ip, x[1:n], Bin)
+  @objective(ip, Max, dot(C, x))
+  @constraint(ip , cte[i=1:m], sum(A[i,j] * x[j] for j=1:n) <= 1)
+  return ip, x
+end
+\end{lstlisting}
+
+Dans un premier temps, on assigne à une variable notre modèle et son solveur grâce au constructeur Model. Ensuite, l'instruction @variable permet de déclarer nos variables grâce à la notation x[1:n] qui permet de faire se répéter l'instruction sans écrire de boucle itérant les variables et répétant l'instruction. C'est aussi à ce niveau qu'on définit les variables comme étant binaires ("Bin" dans le code) \\ 
+
+L'instruction @objective permet de déclarer la fonction objectif qui est en maximisation. On déclare les valeurs de la fonction via la fonction dot qui multiplie les vecteurs C et x valeur par valeur (une notation équivalente aurait été C .* x). \\
+
+Enfin, l'instruction @constraint défini nos contraintes. Pour ce faire, on exécute l'instruction pour chaque contrainte récupérée de notre fichier (de 1 à m) puis on forme notre contrainte en multipliant le coefficient trouvé dans la matrice de contraintes à la variable, donnant nos contraintes de la forme $\sum_{i=1}^{n} x_i \leq 1 $ à l'aide de la matrice donnée par le fichier.
+
+
+
+
+%
+% -----------------------------------------------------------------------------------------------------------------------------------------------------
+%
+
+
+\vspace{5mm}
+\noindent
+\fbox{
+  \begin{minipage}{0.97 \textwidth}
+    \begin{center}
+      \vspace{1mm}
+        \Large{Instances numériques de SPP}
+      \vspace{1mm}
+    \end{center}
+  \end{minipage}
+}
+\vspace{2mm}
+
+\noindent
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline 
+Nom & Nb Variables & Nb contraintes & Densité & Max-Uns & Optimum \\ 
+\hline 
+didactic & 9 & 7 & n/a & n/a & 30\\ 
+\hline 
+pb\_100rnd0100 & 100 & 500 & 2.00 & 2 & 372 \\ 
+\hline
+pb\_100rnd0300 & 100 & 500 & 2.96 & 4 & 203 \\ 
+\hline
+pb\_200rnd0100 & 200 & 1000 & 1.49 & 4 & 416 \\ 
+\hline 
+pb\_200rnd0600 & 200 & 1000 & 2.49 & 8 & 14 \\ 
+\hline 
+pb\_200rnd0900 & 200 & 200 & 1.00 & 2 & 1324 \\ 
+\hline 
+pb\_200rnd1600 & 200 & 600 & 1.00 & 2 & 79 \\ 
+\hline 
+pb\_500rnd0100 & 500 & 2500 & 1.23 & 10 & 323 \\ 
+\hline 
+pb\_500rnd1000 & 500 & 500 & 0.70 & 5 & 179 \\ 
+\hline 
+pb\_1000rnd0100 & 1000 & 5000 & 2.60 & 50 & 67 \\ 
+\hline 
+pb\_2000rnd0100 & 2000 & 10000 & 2.54 & 100 & 40 \\ 
+
+\hline 
+\end{tabular}
+\end{center}
+
+%
+% -----------------------------------------------------------------------------------------------------------------------------------------------------
+%
+
+\vspace{5mm}
+\noindent
+\fbox{
+  \begin{minipage}{0.97 \textwidth}
+    \begin{center}
+      \vspace{1mm}
+        \Large{Heuristique de construction appliquée au SPP}
+      \vspace{1mm}
+    \end{center}
+  \end{minipage}
+}
+\vspace{2mm}
+
+\noindent
+Pour construire une solution de base à notre problème de base, on récupère l'instance à étudier dans le fichier. Ensuite, on utilise la formule d'utilité $\frac{C_i}{Count_i}$ où C est le coefficient de i dans la fonction objectif et Count le nombre de fois où i est présent dans les contraintes. Effectivement, moins une variable est présente dans les contraintes et plus elle rapporte d'argent, plus elle est intéressante.
+\\ \\ On trie ensuite les variables selon leur utilité puis, si elles ne font pas partie d'une contrainte déjà saturée, on les ajoute à notre solution et ce, jusqu'à avoir étudié toute les variables. Quand on sature une condition, on va ajouter les variables concernées par cette condition à un ensemble permettant de connaître les variables inexploitables
+\\ Une fois ceci fait, on dispose de notre solution de base que l'on va chercher à améliorer à l'aide d'une heuristique de recherche locale.
+
+
+%
+% -----------------------------------------------------------------------------------------------------------------------------------------------------
+%
+
+\vspace{5mm}
+\noindent
+\fbox{
+  \begin{minipage}{0.97 \textwidth}
+    \begin{center}
+      \vspace{1mm}
+        \Large{Heuristique d'amélioration appliquée au SPP}
+      \vspace{1mm}
+    \end{center}
+  \end{minipage}
+}
+\vspace{2mm}
+
+\noindent
+A partir d'une solution x0, on va récupérer l'ensemble des solutions voisines à x0. C'est à dire l'ensemble des solutions atteignables via un k-p exchange. Dans notre cas, on va s'intéresser aux permutations 1-1 qui donnent un ensemble de nouvelles solutions intéressantes tout en restant de taille raisonnable. \\
+Pour ce faire, on sélectionne tour à tour (via deux boucles) quelle valeur passer à 0 et quelle autre valeur passer à 1. Afin d'optimiser la génération des voisins, on passe au plus tôt les valeurs déjà à 0 (resp. à 1) quant on choisit quelle valeur passer à 0 (resp. à 1). Ensuite, on vérifie que le voisin généré ne viole aucune contrainte. Encore une fois, par soucis d'optimisation dès qu'une contrainte est violée, on quitte la boucle et on jette ce voisin. \\
+Au cours de la construction de voisins, on ne conserve que la solution améliorant notre solution de base, et si un nouveau voisin est meilleur, il remplace le voisin stocké.
+Dans le cadre de ce DM, on effectue deux améliorations de la solution par k-p exchange avant d'estimer être satisfait de la solution.
+
+%
+% -----------------------------------------------------------------------------------------------------------------------------------------------------
+%
+
+\vspace{5mm}
+\noindent
+\fbox{
+  \begin{minipage}{0.97 \textwidth}
+    \begin{center}
+      \vspace{1mm}
+        \Large{Expérimentation numérique}
+      \vspace{1mm}
+    \end{center}
+  \end{minipage}
+}
+\vspace{2mm}
+
+\noindent
+La machine utilisée pour les tests dispose d'un SSD et d'un processeur intel core i5 à 3.5~GHz.
+$Z$ représente la valeur optimale, $Z_n$ représente la solution obtenue via les heuristiques après $n$ exécution de la recherche locale. \\
+Pour justifier l'utilisation d'heuristiques, j'ai aussi lancé une résolution via le solveur complet MIP de GLPK, certaines instances prenaient cependant énormément de temps et n'ont donc pas été jusqu'au bout. ces dernières sont alors notées $\aleph$
+
+\bgroup
+\def\arraystretch{1.4}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline 
+Nom & $Z$ & $Z_0$ & $Z_2$ &  Tps GLPK & Tps heuristique \\ 
+\hline 
+didactic & 30 & 30 & 30 & 0.000227s & 0.1348s\\ 
+\hline 
+pb\_100rnd0100 & 372 & 342 & 343 & 1.4464s & 0.0672s \\ 
+\hline
+pb\_100rnd0300 & 203 & 193 & 194 & 0.5468s & 0.0671s\\ 
+\hline
+pb\_200rnd0100 & 416 & 351 & 354 & 87.18 min & 0.6910s\\ 
+\hline 
+pb\_200rnd0600 & 14 & 11 & 11 & 85.587s & 0.2214s\\ 
+\hline 
+pb\_200rnd0900 & 1324 & 1078 & 1114 & 0.0017s & 0.4716s\\ 
+\hline 
+pb\_200rnd1600 & 79 & 70 & 70 & 8.42 h & 0.9336s\\ 
+\hline 
+pb\_500rnd0100 & 323 & 267 & 267 & $\aleph$ & 5.699s\\ 
+\hline 
+pb\_500rnd1000 & 179 & 151 & 151 & $\aleph$ & 12.81s\\ 
+\hline 
+pb\_1000rnd0100 & 67 & 49 & 49 & 6 min & 7.2756s \\ 
+\hline 
+pb\_2000rnd0100 & 40 & 37 & 37 & 61.7 min & 50.68s\\ 
+\hline 
+\end{tabular}
+\end{center}
+\egroup
+
+%
+% -----------------------------------------------------------------------------------------------------------------------------------------------------
+%
+
+
+\vspace{5mm}
+\noindent
+\fbox{
+  \begin{minipage}{0.97 \textwidth}
+    \begin{center}
+      \vspace{1mm}
+        \Large{Discussion}
+      \vspace{1mm}
+    \end{center}
+  \end{minipage}
+}
+\vspace{2mm}
+
+\noindent
+Réponse aux questions suivantes :
+
+\begin{itemize}
+\item au regard des temps de résolution requis par le solveur MIP (GLPK) pour obtenir une solution optimale à l'instance considérée, l'usage d'une métaheuristique se justifie-t-il?
+\\ \\
+Le tableau résumant l'expérimentation indique clairement que l'usage d'heuristiques est nécessaires à la résolution de problèmes à échelle réelle. Effectivement, le temps de résolution des solveurs complets grandit rapidement avec le nombre de contraintes et certaines instances pourtant petites peuvent faire tourner le solveur de nombreuses heures là où, malgré sa relative simplicité, notre heuristique donne des résultats pour la majorité acceptable tout en ne dépassant pas l'ordre de la minute pour résoudre un problème.\\
+
+\item avec pour référence la solution optimale, quelle est la qualité des solutions obtenues avec l'heuristique de construction et l'heuristique d'amélioration? \\
+Sur le plan des temps de résolution, quel est le rapport  entre le temps consommé par le solveur MIP et vos heuristiques? \\ \\
+
+Les solutions obtenues sont dans la majorité plutôt proches de l'optimum, malgré que certaines solutions soient un peu éloignées de l'optimum, comme les instances pb\_500 mais dont le temps de résolution complet dépasse les 24h. On remarque cependant avec l'instance pb\_200rnd0900 que dans certains cas particuliers, le solveur complet en plus de donner l'optimum est encore plus rapide que l'heuristique, mais ceci n'est pas une tendance générale. \\
+
+\newpage
+
+\item Le recours aux (méta)heuristiques apparaît-il prometteur ? \\
+Entrevoyez-vous des pistes d'amélioration à apporter 
+aux (méta)heuristiques? \\ \\
+Le recours au (méta)heuristiques est plus que prometteur au vue des résultats sur des ensembles de "petite" taille (comparé à des problèmes à échelle réelle). 
+Sur de tout petits ensembles, les solveurs sont assez optimisés pour surpasser les heuristiques mises en place en rapidité (dans la majorité des cas, car certaines instances comme pb\_200rnd1600 font tourner le solveur très longtemps). \\
+On remarque cependant que notre heuristique peut rester coincée dans des minima locaux. On pourrait donc l'améliorer en augmentant la portée du voisinage (simple mais rapidement coûteux) ou utiliser des mécanismes afin de s'échapper de ces minima locaux en acceptant de plus mauvaises solutions par moment.
+\end{itemize}
+
+\end{document}
+
